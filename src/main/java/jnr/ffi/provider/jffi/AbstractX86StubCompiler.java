@@ -105,6 +105,7 @@ abstract class AbstractX86StubCompiler extends StubCompiler {
 
     }
 
+    // MEMO: ここめっちゃ大事なことしてそう
     @Override
     void attach(Class clazz) {
 
@@ -143,6 +144,7 @@ abstract class AbstractX86StubCompiler extends StubCompiler {
             buf.flip();
             MemoryIO.getInstance().putByteArray(fn, buf.array(), buf.arrayOffset(), buf.limit());
 
+            // MEMO: ここはただのデバッグの処理
             if (DEBUG && X86Disassembler.isAvailable()) {
 
                 dbg.println(clazz.getName() + "." + stub.name + " " + stub.signature);
@@ -167,6 +169,7 @@ abstract class AbstractX86StubCompiler extends StubCompiler {
 
         pm.protectPages(code, (int) npages, PageManager.PROT_READ | PageManager.PROT_EXEC);
 
+        // MEMO: ここで、低レベルなFFIっぽいことしてる？ (javaのclassと、 nativeのmethodを紐付けている)
         NativeMethods.register(clazz, methods);
         StaticDataHolder.PAGES.put(clazz, page);
     }

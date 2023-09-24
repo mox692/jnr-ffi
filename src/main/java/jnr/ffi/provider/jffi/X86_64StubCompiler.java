@@ -347,6 +347,8 @@ final class X86_64StubCompiler extends AbstractX86StubCompiler {
         a.add(rsp, imm(space));
         a.ret();
 
+        // MEMO: 生成したasmを `stubs` ってところに溜めていってるっぽい.
+        //       callerで stubs をどのようにツアkってるKa?
         stubs.add(new Stub(name, sig(resultClass, parameterClasses), a));
     }
 

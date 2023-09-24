@@ -189,6 +189,8 @@ public class AsmLibraryLoader extends LibraryLoader {
             }
         }
 
+        // MEMO: この辺は class を動的に生成する ASM を使っているみたい
+        // https://atmarksharp.v01.jp/posts/asm-java-bytecode-generator.html
         // Create the constructor to set the instance fields
         SkinnyMethodAdapter init = new SkinnyMethodAdapter(cv, ACC_PUBLIC, "<init>",
                 sig(void.class, jnr.ffi.Runtime.class, NativeLibrary.class, Object[].class),
@@ -209,20 +211,27 @@ public class AsmLibraryLoader extends LibraryLoader {
         cv.visitEnd();
 
         try {
+            // MEMO: cw にも cv で集めた情報が入ってる？
             byte[] bytes = cw.toByteArray();
             if (debug) {
                 ClassVisitor trace = AsmUtil.newTraceClassVisitor(new PrintWriter(System.err));
                 new ClassReader(bytes).accept(trace, 0);
             }
 
+            // MEMO: byte列を classのインスタンスにするらしい
+            // https://kagamihoge.hatenablog.com/entry/20120105/1325758304
             Class<T> implClass = classLoader.defineClass(builder.getClassNamePath().replace("/", "."), bytes);
+            // MEMO: コンストラクタを作成する日つゆおがする必要あるらしい. 
+            // https://java.keicode.com/lang/reflection-new-instance.php
             Constructor<T> cons = implClass.getDeclaredConstructor(jnr.ffi.Runtime.class, NativeLibrary.class, Object[].class);
+            // MEMO: T型のインスタンを得る
             T result = cons.newInstance(runtime, library, builder.getObjectFieldValues());
 
             // Attach any native method stubs - we have to delay this until the
             // implementation class is loaded for it to work.
             System.err.flush();
             System.out.flush();
+            // MEMO: T型のインスタンスをアタッチする
             compiler.attach(implClass);
 
             return result;
